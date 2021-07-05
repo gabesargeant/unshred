@@ -29,7 +29,7 @@ func main() {
 	image, t := getPicture(*a.input)
 
 	if *a.shred {
-		shred(image, t)
+		shred(image, t, *a.output)
 		os.Exit(0)
 	}
 
@@ -37,7 +37,7 @@ func main() {
 
 }
 
-func getPicture(input string) (image.Image, string){
+func getPicture(input string) (image.Image, string) {
 	fmt.Println(input)
 	file, err := os.Open(input)
 	if err != nil {
@@ -61,7 +61,7 @@ func defineFlags() Args {
 	a := Args{}
 	a.input = flag.String("i", "", "Input file to be unshred")
 	a.output = flag.String("o", "./output.png", "Output path and filename, defaults to output.png")
-	a.shred = flag.Bool("s", false, "Yes/No : Shred the image, default behavior is to attempt to unshred it")
+	a.shred = flag.Bool("s", true, "Yes/No : Shred the image, default behavior is to attempt to unshred it")
 
 	return a
 }
