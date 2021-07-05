@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"image"
+
+	_ "image/png"
 	"os"
 )
 
@@ -15,6 +17,7 @@ type Args struct {
 }
 
 func main() {
+
 	fmt.Println("helloworld")
 	a := defineFlags()
 	flag.Parse()
@@ -35,16 +38,18 @@ func main() {
 }
 
 func getPicture(input string) (image.Image, string){
-
+	fmt.Println(input)
 	file, err := os.Open(input)
 	if err != nil {
 		fmt.Println("Input file doesn't work, or can't be found")
 		os.Exit(9)
 	}
+	defer file.Close()
 
 	image, t, err := image.Decode(file)
 	if err != nil {
 		fmt.Println("error decoding image file")
+		fmt.Println(err)
 		os.Exit(9)
 
 	}
