@@ -1,5 +1,9 @@
 package main
 
-func shred(){
-	
+import "image"
+
+
+
+func shred(image image.Image, t string) {
+
 }
