@@ -18,7 +18,6 @@ func shred(img image.Image, t string, outName string) {
 	
 	m := bounds.Max
 	mx := m.X
-	//my := m.Y
 
 	cols := make([]int, mx)
 
@@ -39,15 +38,7 @@ func shred(img image.Image, t string, outName string) {
 	out := image.NewRGBA(bounds)
 	
 	
-	for i, x := range cols {
-		fmt.Println(x)
-		for y := 0; y < bounds.Max.Y; y++ {
-			
-			out.Set(i, y, img.At(x,y))
-
-		}
-
-	}
+	
 
 	outfile, _ := os.Create(outName)
 	defer outfile.Close()

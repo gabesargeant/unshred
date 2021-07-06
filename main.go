@@ -33,7 +33,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	unShred(image, t)
+	unShred(image, t, *a.output)
 
 }
 
