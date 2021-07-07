@@ -19,10 +19,6 @@ func unShred(img image.Image, t string, outName string) {
 	mx := m.X
 
 	cols := make(map[int]uint32, mx)
-	//fill cols with numbers
-	// for i := range cols {
-	// 	cols[i] = i
-	// }
 
 	for x := 0; x < bounds.Max.X; x++ {
 
@@ -32,13 +28,19 @@ func unShred(img image.Image, t string, outName string) {
 
 			pixel := img.At(x, y)
 
-			r, g, b, a := pixel.RGBA()
-
-			score := r*g*b + a
+			//r, _, _, _ := pixel.RGBA()
+			//r, g, _, _ := pixel.RGBA()
+			r, g, b, _ := pixel.RGBA()
+			//r, g, b, a:= pixel.RGBA()
+			//fmt.Println("rgba : ", r, " ", g, " ", b)
+			if r == 0 { r = 1}
+			if g == 0 { g = 1}
+			if b == 0 { b = 1}
+			score := (g + b)-r // * a
 			cols[x] += score
 
 		}
-		fmt.Println("col: ", x, ", value: ", cols[x])
+
 	}
 
 	var order []int
@@ -54,7 +56,7 @@ func unShred(img image.Image, t string, outName string) {
 
 	out := image.NewRGBA(bounds)
 
-	for i,x := range order {
+	for i, x := range order {
 		//fmt.Println("final x ", x)
 		for y := 0; y < bounds.Max.Y; y++ {
 
@@ -75,21 +77,22 @@ func basicSort(order []int, cols map[int]uint32, used map[int]int) []int {
 	order = append(order, 0)
 	used[0] = 0
 	tick := 0
-	for len(order) != len(cols) {		
+	for len(order) != len(cols) {
 		n, used := findClosestColumn(order[tick], cols, used)
 		tick++
 		used[n] = n
 		order = append(order, n)
 		//fmt.Println(len(order), len(cols))
 	}
+	fmt.Println("return order length", len(order))
+	//fmt.Println(order)
 	return order
 }
 
 func findClosestColumn(index int, cols map[int]uint32, used map[int]int) (int, map[int]int) {
 
-	var smaller int = -1
-	var larger int = -1
-
+	var delta float64 = math.MaxFloat64
+	var rtn int
 	for k := range cols {
 
 		if k == index {
@@ -100,44 +103,17 @@ func findClosestColumn(index int, cols map[int]uint32, used map[int]int) (int, m
 			continue
 		}
 
-		if cols[index] < cols[k] {
+		d := math.Abs(float64(cols[index] - cols[k]))
 
-			tmp := k
-			if smaller == -1 {
-				smaller = tmp
-			}
-			if cols[tmp] < cols[smaller]{
-				smaller = tmp
-			}
-
-		}
-
-		if cols[index] > cols[k] {
-			
-			tmp := k
-			if larger == -1  {
-				larger = tmp
-				fmt.Println("first go.", index)
-			}
-			if cols[tmp] > cols[larger]{
-				larger = tmp
-			}
-
+		if d < delta {
+			delta = d
+			rtn = k
 		}
 
 	}
-	largerDelta := math.Abs(float64(cols[index] - cols[larger]))
 
-	smallerDelta := math.Abs(float64(cols[index] - cols[smaller]))
-
-	if smallerDelta < largerDelta {
-		return smaller, used
-	}
-//	fmt.Println(larger)
-	return larger, used
+	return rtn, used
 }
-
-
 
 func prependInt(x []int, y int) []int {
 	x = append(x, 0)
