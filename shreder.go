@@ -15,7 +15,7 @@ func shred(img image.Image, t string, outName string) {
 
 	bounds := img.Bounds()
 	fmt.Println(bounds)
-	
+
 	m := bounds.Max
 	mx := m.X
 
@@ -32,27 +32,22 @@ func shred(img image.Image, t string, outName string) {
 		j := rand.Intn(i + 1)
 		cols[i], cols[j] = cols[j], cols[i]
 	}
-	
-
 
 	out := image.NewRGBA(bounds)
-	
-	
+
 	for i, x := range cols {
 		fmt.Println(x)
 		for y := 0; y < bounds.Max.Y; y++ {
 
-			out.Set(i, y, img.At(x,y))
+			out.Set(i, y, img.At(x, y))
 
 		}
 
 	}
-	
 
 	outfile, _ := os.Create(outName)
 	defer outfile.Close()
 
 	png.Encode(outfile, out)
-
 
 }

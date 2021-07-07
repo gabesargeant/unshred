@@ -49,17 +49,16 @@ func unShred(img image.Image, t string, outName string) {
 
 	order = basicSort(order, cols, usedCols)
 
-
 	//writeimage(order, image)
 	//outputCols := make([]int, mx)
 
 	out := image.NewRGBA(bounds)
 
-	for i, x := range order{
-		
+	for i,x := range order {
+		//fmt.Println("final x ", x)
 		for y := 0; y < bounds.Max.Y; y++ {
 
-			out.Set(i, y, img.At(x,y))
+			out.Set(i, y, img.At(x, y))
 
 		}
 	}
@@ -69,41 +68,61 @@ func unShred(img image.Image, t string, outName string) {
 
 	png.Encode(outfile, out)
 
-
-
 }
 
-func basicSort(order []int, cols map[int]uint32, used map[int]int) []int{
+func basicSort(order []int, cols map[int]uint32, used map[int]int) []int {
 
 	order = append(order, 0)
-	used[0]=0;
-
-	for len(order) != len(cols) {
-		n, used := findClosestColumn(order[len(order)-1], cols, used)
+	used[0] = 0
+	tick := 0
+	for len(order) != len(cols) {		
+		n, used := findClosestColumn(order[tick], cols, used)
+		tick++
 		used[n] = n
 		order = append(order, n)
-		fmt.Println(len(order), len(cols))
+		//fmt.Println(len(order), len(cols))
 	}
 	return order
 }
 
 func findClosestColumn(index int, cols map[int]uint32, used map[int]int) (int, map[int]int) {
 
-	var smaller int = 0
-	var larger int = 0
+	var smaller int = -1
+	var larger int = -1
 
 	for k := range cols {
-		fmt.Print(k);
-		if usedColumn(index, used) {
+
+		if k == index {
 			continue
 		}
 
-		if cols[index] < cols[k] && cols[k] <= cols[smaller] {
-			smaller = k
+		if _, ok := used[k]; ok {
+			continue
 		}
 
-		if cols[index] > cols[k] && cols[k] >= cols[larger] {
-			larger = k
+		if cols[index] < cols[k] {
+
+			tmp := k
+			if smaller == -1 {
+				smaller = tmp
+			}
+			if cols[tmp] < cols[smaller]{
+				smaller = tmp
+			}
+
+		}
+
+		if cols[index] > cols[k] {
+			
+			tmp := k
+			if larger == -1  {
+				larger = tmp
+				fmt.Println("first go.", index)
+			}
+			if cols[tmp] > cols[larger]{
+				larger = tmp
+			}
+
 		}
 
 	}
@@ -112,19 +131,13 @@ func findClosestColumn(index int, cols map[int]uint32, used map[int]int) (int, m
 	smallerDelta := math.Abs(float64(cols[index] - cols[smaller]))
 
 	if smallerDelta < largerDelta {
-		return smaller,used
+		return smaller, used
 	}
-	return larger,used
+//	fmt.Println(larger)
+	return larger, used
 }
 
-func usedColumn(index int, used map[int]int) bool {
-	for _, v := range used {
-		if v == index {
-			return true
-		}
-	}
-	return false
-}
+
 
 func prependInt(x []int, y int) []int {
 	x = append(x, 0)
