@@ -17,6 +17,7 @@ func unShred(img image.Image, t string, outName string) {
 
 	m := bounds.Max
 	mx := m.X
+	step := 9
 
 	cols := make(map[int]uint32, mx)
 
@@ -33,11 +34,19 @@ func unShred(img image.Image, t string, outName string) {
 			r, g, b, _ := pixel.RGBA()
 			//r, g, b, a:= pixel.RGBA()
 			//fmt.Println("rgba : ", r, " ", g, " ", b)
-			if r == 0 { r = 1}
-			if g == 0 { g = 1}
-			if b == 0 { b = 1}
-			score := (g + b)-r // * a
-			cols[x] += score
+			if r == 0 {
+				r = 1
+			}
+			if g == 0 {
+				g = 1
+			}
+			if b == 0 {
+				b = 1
+			}
+			score := b // * a
+			if y%step == 0 {
+				cols[x] += score
+			}
 
 		}
 
@@ -105,7 +114,7 @@ func findClosestColumn(index int, cols map[int]uint32, used map[int]int) (int, m
 
 		d := math.Abs(float64(cols[index] - cols[k]))
 
-		if d < delta {
+		if d <= delta {
 			delta = d
 			rtn = k
 		}
