@@ -17,7 +17,7 @@ func unShred(img image.Image, t string, outName string) {
 
 	m := bounds.Max
 	mx := m.X
-	step := 9
+	//step := 9
 
 	cols := make(map[int]uint32, mx)
 
@@ -43,10 +43,10 @@ func unShred(img image.Image, t string, outName string) {
 			if b == 0 {
 				b = 1
 			}
-			score := b // * a
-			if y%step == 0 {
-				cols[x] += score
-			}
+			score := (r-g-b)-uint32(y)
+		
+			cols[x] += score
+			 // * a
 
 		}
 
