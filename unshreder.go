@@ -18,8 +18,19 @@ func unShred(img image.Image, t string, outName string) {
 	m := bounds.Max
 	mx := m.X
 	//step := 9
+	my := m.Y
+	if (my % 2 !=0){
+		my--
+	}
+	mid := my / 2
 
-	cols := make(map[int]uint32, mx)
+	cols := make(map[int][]uint32, mx)
+	
+	for i:=0; i < mx; i++ {
+		cols[i] = append(cols[i], 0,0)
+	}
+
+	
 
 	for x := 0; x < bounds.Max.X; x++ {
 
@@ -43,9 +54,15 @@ func unShred(img image.Image, t string, outName string) {
 			if b == 0 {
 				b = 1
 			}
-			score := (r-g-b)-uint32(y)
+			score := (r)
 		
-			cols[x] += score
+			if y < mid {
+				cols[x][0] += score
+			}else{
+				cols[x][1] += score
+			}
+
+			
 			 // * a
 
 		}
@@ -81,7 +98,7 @@ func unShred(img image.Image, t string, outName string) {
 
 }
 
-func basicSort(order []int, cols map[int]uint32, used map[int]int) []int {
+func basicSort(order []int, cols map[int][]uint32, used map[int]int) []int {
 
 	order = append(order, 0)
 	used[0] = 0
@@ -98,9 +115,10 @@ func basicSort(order []int, cols map[int]uint32, used map[int]int) []int {
 	return order
 }
 
-func findClosestColumn(index int, cols map[int]uint32, used map[int]int) (int, map[int]int) {
+func findClosestColumn(index int, cols map[int][]uint32, used map[int]int) (int, map[int]int) {
 
 	var delta float64 = math.MaxFloat64
+	var delta2 float64 = math.MaxFloat64
 	var rtn int
 	for k := range cols {
 
@@ -112,12 +130,16 @@ func findClosestColumn(index int, cols map[int]uint32, used map[int]int) (int, m
 			continue
 		}
 
-		d := math.Abs(float64(cols[index] - cols[k]))
+		d := math.Abs(float64(cols[index][0] - cols[k][0]))
+		d2 := math.Abs(float64(cols[index][1] - cols[k][1]))
 
-		if d <= delta {
+		if  d2 <= delta2 && d <= delta{
 			delta = d
+			delta2 = d2
 			rtn = k
+			
 		}
+		
 
 	}
 
