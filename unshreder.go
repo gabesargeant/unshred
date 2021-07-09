@@ -23,7 +23,7 @@ func unShred(img image.Image, t string, outName string) {
 
 	for x := 0; x < bounds.Max.X; x++ {
 
-		for y := 0; y < bounds.Max.Y; y++ {
+		for y := 0; y < 200; y++ {
 
 			pixel := img.At(x, y)
 
@@ -40,7 +40,7 @@ func unShred(img image.Image, t string, outName string) {
 			}
 			//use greyscale for the score
 			//score := ((float64(r)*0.21)*(float64(b)*0.07) + (float64(g) * 0.72)) / 3 // * a
-			score := r + b
+			score := r - b - g - uint32(y)
 			cols[x] = append(cols[x], uint32(score))
 
 		}
@@ -143,7 +143,7 @@ func findClosestColumn(index int, cols map[int][]uint32, used map[int]int) (int,
 		}
 
 	}
-	fmt.Println(closer);
+	//fmt.Println(closer);
 
 	return rtn, used
 }
