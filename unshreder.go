@@ -115,13 +115,19 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int) (
 		}
 
 		scores := cols[index]
-
+		
 		cd := columnDiff{}
 		cd.columnNumber = k
 		for i, p := range cols[k] {
 
 			r, g, b, _ := p.RGBA() //compare each pixel at each y location against each
+			if i > len(scores){
+				continue
+			}
+			
+
 			sr, sg, sb, _ := scores[i].RGBA()
+
 
 			cd.r = append(cd.r, math.Abs(float64(r-sr)))
 			cd.g = append(cd.g, math.Abs(float64(g-sg)))
@@ -196,8 +202,8 @@ func findLowestDiff(cols map[int]columnDiff) int {
 	}
 
 	//findHighest occurance
-	fmt.Println("lowR", len(lowestR))
-	fmt.Println("lowR", len(lowestB))
+	//fmt.Println("lowR", len(lowestR))
+	//fmt.Println("lowR", len(lowestB))
 	rtn := -1
 	//arr := make([]int, len(lowestG))
 	for i := 0; i < len(lowestR); i++{
