@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"image/png"
 	"math"
 	"os"
@@ -19,7 +20,7 @@ func unShred(img image.Image, t string, outName string) {
 	//mx := m.X
 	//step := m.Y / 30
 
-	cols := make(map[int][]uint32)
+	cols := make(map[int][]color.RGBA)
 
 	for x := 0; x < bounds.Max.X; x++ {
 
@@ -27,21 +28,9 @@ func unShred(img image.Image, t string, outName string) {
 
 			pixel := img.At(x, y)
 
-			r, g, b, _ := pixel.RGBA()
+			r, g, b, a := pixel.RGBA()
 
-			if r == 0 {
-				r = 1
-			}
-			if g == 0 {
-				g = 1
-			}
-			if b == 0 {
-				b = 1
-			}
-			//use greyscale for the score
-			//score := ((float64(r)*0.21)*(float64(b)*0.07) + (float64(g) * 0.72)) / 3 // * a
-			score := r - b - g - uint32(y)
-			cols[x] = append(cols[x], uint32(score))
+			cols[x] = append(cols[x], color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)})
 
 		}
 
@@ -52,6 +41,9 @@ func unShred(img image.Image, t string, outName string) {
 
 	//start position
 	//column 1
+	fmt.Println("cols",len(cols))
+	fmt.Println("cols[0]",len(cols[0]))
+	
 
 	order = basicSort(order, cols, usedCols)
 
@@ -76,7 +68,7 @@ func unShred(img image.Image, t string, outName string) {
 
 }
 
-func basicSort(order []int, cols map[int][]uint32, used map[int]int) []int {
+func basicSort(order []int, cols map[int][]color.RGBA, used map[int]int) []int {
 
 	order = append(order, 0)
 	used[0] = 0
@@ -93,13 +85,16 @@ func basicSort(order []int, cols map[int][]uint32, used map[int]int) []int {
 	return order
 }
 
-func findClosestColumn(index int, cols map[int][]uint32, used map[int]int) (int, map[int]int) {
+func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int) (int, map[int]int) {
 
-	var rtn int
+	//var rtn int
+
+	delta := make(map[int][]map[string]float64)
+
+	//var closer = 0fmt.Println("cols,",len(cols))
+	// fmt.Println("delta", len(delta))
+	// fmt.Println("detla[0]",len(delta[0]))
 	
-	var delta []float64
-	var closer = 0
-
 	for k := range cols {
 
 		if k == index {
@@ -111,46 +106,48 @@ func findClosestColumn(index int, cols map[int][]uint32, used map[int]int) (int,
 		}
 
 		scores := cols[index]
-		scores2 := cols[k]
+		deltaArray := make([]map[string]float64, len(cols[0]))
 
-		var scoreDelta []float64
+		for i, p := range cols[k] {
+			scoreDelta := make(map[string]float64)
 
-		for i := range scores {
-			//fmt.Println(i);
-			scoreDelta = append(scoreDelta, math.Abs(float64(scores[i]-scores2[i])))
-		}
+			r, g, b, _ := p.RGBA()  //compare each pixel at each y location against each 
+			sr,sg,sb, _ := scores[i].RGBA()
+			// scoreDelta = append(scoreDelta, math.Abs(float64(r-sr)))
+			// scoreDelta = append(scoreDelta, math.Abs(float64(g-sg)))
+			// scoreDelta = append(scoreDelta, math.Abs(float64(b-sb)))
 
-		if len(delta) == 0 {
-		 	for i:=0; i < len(scoreDelta); i++{
-				 delta = append(delta, math.MaxFloat64)
-			 }
-		}
+			scoreDelta["r"] = math.Abs(float64(r-sr))
+			scoreDelta["g"] = math.Abs(float64(g-sg))
+			scoreDelta["b"] = math.Abs(float64(b-sb))
 
-		clsr := 0
-		for i := range scoreDelta {
-
-			if scoreDelta[i] <= delta[i] {
-				//fmt.Println(scoreDelta[])
-				clsr++
-			}
+			
+			deltaArray = append(deltaArray, scoreDelta)
+			
+			delta[i] = deltaArray
 
 		}
 
-		if clsr > closer {
-			delta = scoreDelta
-			rtn = k
-			closer = clsr
-		}
 
 	}
-	//fmt.Println(closer);
+	fmt.Println(len(used))
+	// fmt.Println("cols,",len(cols))
+	// fmt.Println("delta", len(delta))
+	// fmt.Println("detla[0]",len(delta[0]))
 
-	return rtn, used
+	//closest := -1
+	//max64 := math.MaxFloat64
+
+	// for i, v := range delta {
+		
+	// 	//fmt.Println(i,v)
+
+
+
+
+	// }
+	
+
+	return index, used
 }
 
-func prependInt(x []int, y int) []int {
-	x = append(x, 0)
-	copy(x[1:], x)
-	x[0] = y
-	return x
-}
