@@ -78,18 +78,29 @@ func basicSort(order []int, cols map[int][]color.RGBA, used map[int]int) []int {
 		tick++
 		used[n] = n
 		order = append(order, n)
-		//fmt.Println(len(order), len(cols))
+		fmt.Println(len(order), len(cols))
 	}
 	fmt.Println("return order length", len(order))
 	//fmt.Println(order)
 	return order
 }
 
+
+type columnDiff struct {
+	columnNumber int;
+	r []float64
+	g []float64
+	b []float64
+	
+}
+
+
+
 func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int) (int, map[int]int) {
 
 	//var rtn int
 
-	delta := make(map[int][]map[string]float64)
+	delta := make(map[int]columnDiff)
 
 	//var closer = 0fmt.Println("cols,",len(cols))
 	// fmt.Println("delta", len(delta))
@@ -106,46 +117,28 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int) (
 		}
 
 		scores := cols[index]
-		deltaArray := make([]map[string]float64, len(cols[0]))
-
+	
+		cd := columnDiff{}
+		cd.columnNumber = k
 		for i, p := range cols[k] {
-			scoreDelta := make(map[string]float64)
-
+			
 			r, g, b, _ := p.RGBA()  //compare each pixel at each y location against each 
 			sr,sg,sb, _ := scores[i].RGBA()
-			// scoreDelta = append(scoreDelta, math.Abs(float64(r-sr)))
-			// scoreDelta = append(scoreDelta, math.Abs(float64(g-sg)))
-			// scoreDelta = append(scoreDelta, math.Abs(float64(b-sb)))
-
-			scoreDelta["r"] = math.Abs(float64(r-sr))
-			scoreDelta["g"] = math.Abs(float64(g-sg))
-			scoreDelta["b"] = math.Abs(float64(b-sb))
-
-			
-			deltaArray = append(deltaArray, scoreDelta)
-			
-			delta[i] = deltaArray
+	
+			cd.r = append(cd.r,math.Abs(float64(r-sr)))
+			cd.g = append(cd.g,math.Abs(float64(g-sg)))
+			cd.b = append(cd.b, math.Abs(float64(b-sb)))		
 
 		}
-
-
-	}
-	fmt.Println(len(used))
-	// fmt.Println("cols,",len(cols))
-	// fmt.Println("delta", len(delta))
-	// fmt.Println("detla[0]",len(delta[0]))
-
-	//closest := -1
-	//max64 := math.MaxFloat64
-
-	// for i, v := range delta {
+		delta[k] = cd
 		
-	// 	//fmt.Println(i,v)
+	}
 
-
-
-
-	// }
+	fmt.Println(len(delta))
+	fmt.Println(len(delta[8].r), delta[9].columnNumber)
+	fmt.Println(len(used))
+	
+	///todo, find the lowest array sequence in the diff compared to col diff on. 
 	
 
 	return index, used
