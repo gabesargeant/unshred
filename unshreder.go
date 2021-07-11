@@ -32,8 +32,7 @@ func unShred(img image.Image, t string, outName string) {
 
 			cols[x] = append(cols[x], color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)})
 
-			
-			 // * a
+			// * a
 
 		}
 
@@ -44,9 +43,8 @@ func unShred(img image.Image, t string, outName string) {
 
 	//start position
 	//column 1
-	fmt.Println("cols",len(cols))
-	fmt.Println("cols[0]",len(cols[0]))
-	
+	fmt.Println("cols", len(cols))
+	fmt.Println("cols[0]", len(cols[0]))
 
 	order = basicSort(order, cols, usedCols)
 
@@ -88,16 +86,13 @@ func basicSort(order []int, cols map[int][]color.RGBA, used map[int]int) []int {
 	return order
 }
 
-
 type columnDiff struct {
-	columnNumber int;
-	r []float64
-	g []float64
-	b []float64
-	
+	columnNumber int
+	r            []float64
+	g            []float64
+	b            []float64
+	lowest       int
 }
-
-
 
 func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int) (int, map[int]int) {
 
@@ -108,7 +103,7 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int) (
 	//var closer = 0fmt.Println("cols,",len(cols))
 	// fmt.Println("delta", len(delta))
 	// fmt.Println("detla[0]",len(delta[0]))
-	
+
 	for k := range cols {
 
 		if k == index {
@@ -120,30 +115,104 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int) (
 		}
 
 		scores := cols[index]
-	
+
 		cd := columnDiff{}
 		cd.columnNumber = k
 		for i, p := range cols[k] {
-			
-			r, g, b, _ := p.RGBA()  //compare each pixel at each y location against each 
-			sr,sg,sb, _ := scores[i].RGBA()
-	
-			cd.r = append(cd.r,math.Abs(float64(r-sr)))
-			cd.g = append(cd.g,math.Abs(float64(g-sg)))
-			cd.b = append(cd.b, math.Abs(float64(b-sb)))		
+
+			r, g, b, _ := p.RGBA() //compare each pixel at each y location against each
+			sr, sg, sb, _ := scores[i].RGBA()
+
+			cd.r = append(cd.r, math.Abs(float64(r-sr)))
+			cd.g = append(cd.g, math.Abs(float64(g-sg)))
+			cd.b = append(cd.b, math.Abs(float64(b-sb)))
 
 		}
 		delta[k] = cd
-		
+
 	}
 
-	fmt.Println(len(delta))
-	fmt.Println(len(delta[8].r), delta[9].columnNumber)
-	fmt.Println(len(used))
-	
-	///todo, find the lowest array sequence in the diff compared to col diff on. 
-	
+	//fmt.Println(len(delta))
+	//fmt.Println(len(delta[8].r), delta[9].columnNumber)
+	//fmt.Println(len(used))
 
-	return index, used
+	//he lowest array sequence in the diff compared to col diff on.
+	rtn := findLowestDiff(delta)
+
+	return rtn, used
 }
 
+func findLowestDiff(cols map[int]columnDiff) int {
+	var ra [][]float64
+	var ga [][]float64
+	var ba [][]float64
+	//PIVOT THE COLS INTO ROWS
+	for _, v := range cols {
+		ra = append(ra, v.r)
+		ga = append(ga, v.g)
+		ba = append(ba, v.b)
+	}
+
+	lowestR := make(map[int]int)
+	for i, v := range ra {		
+		tmp := math.MaxFloat64
+		col := -1
+		for ii, vv := range v {
+
+			if vv < tmp {
+				tmp = vv
+				col = ii
+			}
+		}
+		lowestR[i] = col
+	}
+
+	lowestG := make(map[int]int)
+	for i, v := range ga {		
+		tmp := math.MaxFloat64
+		col := -1
+		for ii, vv := range v {
+
+			if vv < tmp {
+				tmp = vv
+				col = ii
+			}
+		}
+		lowestG[i] = col
+	}
+
+	lowestB := make(map[int]int)
+	for i, v := range ba {		
+		tmp := math.MaxFloat64
+		col := -1
+		for ii, vv := range v {
+
+			if vv < tmp {
+				tmp = vv
+				col = ii
+			}
+		}
+		lowestB[i] = col
+	}
+
+	//findHighest occurance
+	fmt.Println("lowR", len(lowestR))
+	fmt.Println("lowR", len(lowestB))
+	rtn := -1
+	//arr := make([]int, len(lowestG))
+	for i := 0; i < len(lowestR); i++{
+		lr := lowestR[i]
+		lg := lowestG[i]
+		lb := lowestB[i]
+		if lr == lb && lb == lg {
+			rtn = lr;
+		}
+
+	}
+
+
+
+	
+
+	return rtn
+}
