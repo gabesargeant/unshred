@@ -59,9 +59,9 @@ func getPicture(input string) (image.Image, string) {
 
 func defineFlags() Args {
 	a := Args{}
-	a.input = flag.String("i", "", "Input file to be unshred")
-	a.output = flag.String("o", "./output.png", "Output path and filename, defaults to output.png")
-	a.shred = flag.Bool("s", true, "Yes/No : Shred the image, default behavior is to attempt to unshred it")
+	a.input = flag.String("i", "./shredded.png", "Input file to be unshred")
+	a.output = flag.String("o", "unshredded.png", "Output path and filename, defaults to output.png")
+	a.shred = flag.Bool("s", false, "Yes/No : Shred the image, default behavior is to attempt to unshred it")
 
 	return a
 }

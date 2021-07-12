@@ -75,6 +75,10 @@ func basicSort(order []int, cols map[int][]color.RGBA, used map[int]int) []int {
 	used[0] = 0
 	tick := 0
 	for len(order) != len(cols) {
+		if order[tick] == -1 {
+			continue
+		}
+
 		n, used := findClosestColumn(order[tick], cols, used)
 		tick++
 		used[n] = n
@@ -115,23 +119,20 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int) (
 		}
 
 		scores := cols[index]
-		
+
 		cd := columnDiff{}
 		cd.columnNumber = k
 		for i, p := range cols[k] {
 
 			r, g, b, _ := p.RGBA() //compare each pixel at each y location against each
-			if i > len(scores){
+			if i > len(scores) {
 				continue
 			}
-			
 
 			sr, sg, sb, _ := scores[i].RGBA()
 
-
-			cd.r = append(cd.r, math.Abs(float64(r-sr)))
-			cd.g = append(cd.g, math.Abs(float64(g-sg)))
-			cd.b = append(cd.b, math.Abs(float64(b-sb)))
+			//fmt.Println("abs", math.Abs(float64(r-sr))-math.Abs(float64(g-sg))-math.Abs(float64(b-sb)))
+			cd.r = append(cd.r, math.Abs(float64(r-sr))-math.Abs(float64(g-sg))-math.Abs(float64(b-sb)))
 
 		}
 		delta[k] = cd
@@ -160,7 +161,7 @@ func findLowestDiff(cols map[int]columnDiff) int {
 	}
 
 	lowestR := make(map[int]int)
-	for i, v := range ra {		
+	for i, v := range ra {
 		tmp := math.MaxFloat64
 		col := -1
 		for ii, vv := range v {
@@ -172,53 +173,51 @@ func findLowestDiff(cols map[int]columnDiff) int {
 		}
 		lowestR[i] = col
 	}
-
-	lowestG := make(map[int]int)
-	for i, v := range ga {		
-		tmp := math.MaxFloat64
-		col := -1
-		for ii, vv := range v {
-
-			if vv < tmp {
-				tmp = vv
-				col = ii
-			}
-		}
-		lowestG[i] = col
-	}
-
-	lowestB := make(map[int]int)
-	for i, v := range ba {		
-		tmp := math.MaxFloat64
-		col := -1
-		for ii, vv := range v {
-
-			if vv < tmp {
-				tmp = vv
-				col = ii
-			}
-		}
-		lowestB[i] = col
-	}
-
-	//findHighest occurance
-	//fmt.Println("lowR", len(lowestR))
-	//fmt.Println("lowR", len(lowestB))
+	
 	rtn := -1
 	//arr := make([]int, len(lowestG))
-	for i := 0; i < len(lowestR); i++{
+	for i := 0; i < len(lowestR); i++ {
 		lr := lowestR[i]
-		lg := lowestG[i]
-		lb := lowestB[i]
-		if lr == lb && lb == lg {
 			rtn = lr;
-		}
 
 	}
 
-
-
-	
+	rtn = findMostFrequentElement(lowestR)
 
 	return rtn
+}
+
+
+func findMostFrequentElement(input map[int]int)int {
+	
+	freq := make(map[int]int);
+	for _,v := range input {
+
+		if val, ok := freq[v]; ok {
+    		freq[val]++
+		}else {
+			freq[val] = 1
+		}
+	}
+
+	maxV := -1
+	maxK := -1
+
+	for i, v:= range freq {
+
+		if v > maxV {
+			maxV = v
+			maxK = i
+		}
+
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	return maxK
 }
