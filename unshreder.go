@@ -24,7 +24,7 @@ func unShred(img image.Image, t string, outName string) {
 
 	for x := 0; x < bounds.Max.X; x++ {
 
-		for y := 0; y < 200; y++ {
+		for y := 0; y < bounds.Max.Y; y++ {
 
 			pixel := img.At(x, y)
 
@@ -122,6 +122,7 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int) (
 
 		cd := columnDiff{}
 		cd.columnNumber = k
+
 		for i, p := range cols[k] {
 
 			r, g, b, _ := p.RGBA() //compare each pixel at each y location against each
@@ -135,15 +136,18 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int) (
 			cd.r = append(cd.r, math.Abs(float64(r-sr))-math.Abs(float64(g-sg))-math.Abs(float64(b-sb)))
 
 		}
-		delta[k] = cd
+		if _, ok := used[k]; ok {
+			continue
+		}else{
+			delta[k] = cd
+		}
+		
 
 	}
 
-	//fmt.Println(len(delta))
-	//fmt.Println(len(delta[8].r), delta[9].columnNumber)
-	//fmt.Println(len(used))
-
 	//he lowest array sequence in the diff compared to col diff on.
+	fmt.Println("delta ", len(delta))
+	fmt.Println("used ", len(used))
 	rtn := findLowestDiff(delta)
 
 	return rtn, used
@@ -151,13 +155,10 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int) (
 
 func findLowestDiff(cols map[int]columnDiff) int {
 	var ra [][]float64
-	var ga [][]float64
-	var ba [][]float64
+
 	//PIVOT THE COLS INTO ROWS
 	for _, v := range cols {
 		ra = append(ra, v.r)
-		ga = append(ga, v.g)
-		ba = append(ba, v.b)
 	}
 
 	lowestR := make(map[int]int)
@@ -173,51 +174,34 @@ func findLowestDiff(cols map[int]columnDiff) int {
 		}
 		lowestR[i] = col
 	}
-	
-	rtn := -1
-	//arr := make([]int, len(lowestG))
-	for i := 0; i < len(lowestR); i++ {
-		lr := lowestR[i]
-			rtn = lr;
 
-	}
-
-	rtn = findMostFrequentElement(lowestR)
+	rtn := findMostFrequentElement(lowestR)
 
 	return rtn
 }
 
+func findMostFrequentElement(input map[int]int) int {
 
-func findMostFrequentElement(input map[int]int)int {
-	
-	freq := make(map[int]int);
-	for _,v := range input {
+	freq := make(map[int]int)
+	for k, _ := range input {
 
-		if val, ok := freq[v]; ok {
-    		freq[val]++
-		}else {
+		if val, ok := freq[k]; ok {
+			freq[val]++
+		} else {
 			freq[val] = 1
 		}
 	}
 
 	maxV := -1
-	maxK := -1
 
-	for i, v:= range freq {
+	for _, v := range freq {
 
 		if v > maxV {
 			maxV = v
-			maxK = i
+
 		}
 
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	return maxK
+
+	return maxV
 }
