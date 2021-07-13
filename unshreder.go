@@ -83,7 +83,7 @@ func basicSort(order []int, cols map[int][]color.RGBA, used map[int]int) []int {
 		tick++
 		used[n] = n
 		order = append(order, n)
-		fmt.Println(len(order), len(cols))
+		//fmt.Println(len(order), len(cols))
 	}
 	fmt.Println("return order length", len(order))
 	//fmt.Println(order)
@@ -91,7 +91,8 @@ func basicSort(order []int, cols map[int][]color.RGBA, used map[int]int) []int {
 }
 
 type columnDiff struct {
-	columnNumber int
+	column int
+	totalColumnScore float64
 	r            []float64
 	g            []float64
 	b            []float64
@@ -121,7 +122,7 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int) (
 		scores := cols[index]
 
 		cd := columnDiff{}
-		cd.columnNumber = k
+		cd.column = k
 
 		for i, p := range cols[k] {
 
@@ -132,23 +133,35 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int) (
 
 			sr, sg, sb, _ := scores[i].RGBA()
 
-			//fmt.Println("abs", math.Abs(float64(r-sr))-math.Abs(float64(g-sg))-math.Abs(float64(b-sb)))
-			cd.r = append(cd.r, math.Abs(float64(r-sr))-math.Abs(float64(g-sg))-math.Abs(float64(b-sb)))
+			cd.r = append(cd.r, math.Abs(float64(r-sr)) + (float64(g-sg)) + (float64(b-sb)))
+			
+			cd.totalColumnScore += math.Abs(float64(r-sr) + float64(g-sg)+float64(b-sb))
+			
 
 		}
 		if _, ok := used[k]; ok {
 			continue
-		}else{
+		} else {
 			delta[k] = cd
 		}
-		
 
 	}
 
 	//he lowest array sequence in the diff compared to col diff on.
-	fmt.Println("delta ", len(delta))
-	fmt.Println("used ", len(used))
-	rtn := findLowestDiff(delta)
+	// fmt.Println("delta ", len(delta))
+	// fmt.Println("used ", len(used))
+	//rtn := findLowestDiff(delta)
+
+	lowest := math.MaxFloat64
+	rtn := -1
+	for k, v := range delta {
+
+		if math.Abs(v.totalColumnScore) < lowest {
+			lowest = math.Abs(v.totalColumnScore)
+			rtn = k
+		}
+
+	}
 
 	return rtn, used
 }
