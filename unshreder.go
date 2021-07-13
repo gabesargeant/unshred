@@ -46,7 +46,7 @@ func unShred(img image.Image, t string, outName string) {
 	fmt.Println("cols", len(cols))
 	fmt.Println("cols[0]", len(cols[0]))
 
-	order = basicSort(order, cols, usedCols)
+	order = basicSort(order, cols, usedCols, img.Bounds().Max.Y)
 
 	//writeimage(order, image)
 	//outputCols := make([]int, mx)
@@ -69,7 +69,7 @@ func unShred(img image.Image, t string, outName string) {
 
 }
 
-func basicSort(order []int, cols map[int][]color.RGBA, used map[int]int) []int {
+func basicSort(order []int, cols map[int][]color.RGBA, used map[int]int, height int) []int {
 
 	order = append(order, 0)
 	used[0] = 0
@@ -79,7 +79,7 @@ func basicSort(order []int, cols map[int][]color.RGBA, used map[int]int) []int {
 			continue
 		}
 
-		n, used := findClosestColumn(order[tick], cols, used)
+		n, used := findClosestColumn(order[tick], cols, used, height)
 		tick++
 		used[n] = n
 		order = append(order, n)
@@ -96,12 +96,14 @@ type columnDiff struct {
 	r            []float64
 	g            []float64
 	b            []float64
-	lowest       int
+	lowestCount       int
+
 }
 
-func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int) (int, map[int]int) {
+func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int, height int) (int, map[int]int) {
 
 	//var rtn int
+	step := height / 4
 
 	delta := make(map[int]columnDiff)
 
@@ -123,6 +125,7 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int) (
 
 		cd := columnDiff{}
 		cd.column = k
+		cd.lowestCount = 0
 
 		for i, p := range cols[k] {
 
@@ -135,10 +138,33 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int) (
 
 			cd.r = append(cd.r, math.Abs(float64(r-sr)) + (float64(g-sg)) + (float64(b-sb)))
 			
-			cd.totalColumnScore += math.Abs(float64(r-sr) + float64(g-sg)+float64(b-sb))
+			cd.totalColumnScore += math.Abs(float64(r-sr) + float64(g-sg) + float64(b-sb)/3)
 			
 
 		}
+
+		for i := 0; i < height; i++ {
+
+			r, g, b, _ := p.RGBA() //compare each pixel at each y location against each
+			if i > len(scores) {
+				continue
+			}
+
+			sr, sg, sb, _ := scores[i].RGBA()
+
+			cd.r = append(cd.r, math.Abs(float64(r-sr)) + (float64(g-sg)) + (float64(b-sb)))
+			
+
+
+
+		}
+
+
+
+
+
+
+
 		if _, ok := used[k]; ok {
 			continue
 		} else {
@@ -166,31 +192,92 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int) (
 	return rtn, used
 }
 
+func getAKey(m map[int]columnDiff) int {
+    for k := range m {
+        return k
+    }
+    return 0
+}
+
 func findLowestDiff(cols map[int]columnDiff) int {
-	var ra [][]float64
+	height := 0
+	if len(cols) > 1 {
+		height = len(cols[getAKey(cols)].r)
+	}else {
+		fmt.Println("cols = 0", len(cols))
 
-	//PIVOT THE COLS INTO ROWS
-	for _, v := range cols {
-		ra = append(ra, v.r)
 	}
 
-	lowestR := make(map[int]int)
-	for i, v := range ra {
-		tmp := math.MaxFloat64
-		col := -1
-		for ii, vv := range v {
+	for i := 0; i < height; i+=2{
+		lowest := math.MaxFloat64
+		columnID := -1
+		for id ,v := range cols {
 
-			if vv < tmp {
-				tmp = vv
-				col = ii
+			pixelDiffSum := 0.0
+			if i+1 < height{
+				pixelDiffSum = v.r[i] + v.r[i+1]
+			}else{
+				pixelDiffSum = v.r[i]
 			}
+			if pixelDiffSum < lowest {
+				lowest = pixelDiffSum
+				columnID = id
+			}
+			
 		}
-		lowestR[i] = col
+		cd :=	cols[columnID]
+		cd.lowestCount++
 	}
 
-	rtn := findMostFrequentElement(lowestR)
+	score := -1
+	closestColumn := -1
+	for k, v := range cols {
 
-	return rtn
+		if (v.lowestCount > score){
+			score = v.lowestCount
+			closestColumn = k
+
+		}
+
+	}
+	
+	return closestColumn
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	// var ra [][]float64
+
+	// //PIVOT THE COLS INTO ROWS
+	// for _, v := range cols {
+	// 	ra = append(ra, v.r)
+	// }
+
+	// lowestR := make(map[int]int)
+	// for i, v := range ra {
+	// 	tmp := math.MaxFloat64
+	// 	col := -1
+	// 	for ii, vv := range v {
+
+	// 		if vv < tmp {
+	// 			tmp = vv
+	// 			col = ii
+	// 		}
+	// 	}
+	// 	lowestR[i] = col
+	// }
+
+	// rtn := findMostFrequentElement(lowestR)
+
+	//return rtn
 }
 
 func findMostFrequentElement(input map[int]int) int {
