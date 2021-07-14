@@ -9,47 +9,58 @@ import (
 	"os"
 )
 
+
+type column struct{
+	columnPosition int
+	pixels []color.RGBA
+	used bool
+
+}
+
 func unShred(img image.Image, t string, outName string) {
 
 	fmt.Println("Put te image back together")
 
 	bounds := img.Bounds()
 	fmt.Println(bounds)
+	
+	cols1 := make(map[int][]color.RGBA)
 
-	//m := bounds.Max
-	//mx := m.X
-	//step := m.Y / 30
+	cols2 := make([]column,0)
 
-	cols := make(map[int][]color.RGBA)
 
 	for x := 0; x < bounds.Max.X; x++ {
 
+		c := column{}
+		c.columnPosition = x
 		for y := 0; y < bounds.Max.Y; y++ {
 
 			pixel := img.At(x, y)
 
 			r, g, b, a := pixel.RGBA()
 
-			cols[x] = append(cols[x], color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)})
+			cols1[x] = append(cols1[x], color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)})
 
-			// * a
+			c.pixels = append(c.pixels, color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)})
+	
 
 		}
+		cols2 = append(cols2, c)
 
 	}
 
 	var order []int
-	usedCols := make(map[int]int)
+	usedCols1 := make(map[int]int)
 
 	//start position
 	//column 1
-	fmt.Println("cols", len(cols))
-	fmt.Println("cols[0]", len(cols[0]))
+	fmt.Println("cols", len(cols1))
+	fmt.Println("cols[0]", len(cols1[0]))
 
-	order = basicSort(order, cols, usedCols, img.Bounds().Max.Y)
 
-	//writeimage(order, image)
-	//outputCols := make([]int, mx)
+	order = basicSort(order, cols1, usedCols1, img.Bounds().Max.Y)
+
+	order = sort2(cols2, img.Bounds())
 
 	out := image.NewRGBA(bounds)
 
@@ -64,10 +75,39 @@ func unShred(img image.Image, t string, outName string) {
 
 	outfile, _ := os.Create(outName)
 	defer outfile.Close()
-
 	png.Encode(outfile, out)
 
 }
+
+
+
+func sort2(cols []column, bounds image.Rectangle) []int {
+
+	sortedColumn := make([]column,0)
+
+	used := 0;
+
+	for used < bounds.Max.X {
+
+		for i, v := range column {
+
+			v.
+
+
+
+
+		}
+	}
+
+
+
+
+}
+
+
+
+
+
 
 func basicSort(order []int, cols map[int][]color.RGBA, used map[int]int, height int) []int {
 
@@ -83,7 +123,7 @@ func basicSort(order []int, cols map[int][]color.RGBA, used map[int]int, height 
 		tick++
 		used[n] = n
 		order = append(order, n)
-		//fmt.Println(len(order), len(cols))
+	//	fmt.Println(len(order), len(cols))
 	}
 	fmt.Println("return order length", len(order))
 	//fmt.Println(order)
@@ -102,14 +142,7 @@ type columnDiff struct {
 
 func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int, height int) (int, map[int]int) {
 
-	//var rtn int
-	step := height / 4
-
 	delta := make(map[int]columnDiff)
-
-	//var closer = 0fmt.Println("cols,",len(cols))
-	// fmt.Println("delta", len(delta))
-	// fmt.Println("detla[0]",len(delta[0]))
 
 	for k := range cols {
 
@@ -137,33 +170,13 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int, h
 			sr, sg, sb, _ := scores[i].RGBA()
 
 			cd.r = append(cd.r, math.Abs(float64(r-sr)) + (float64(g-sg)) + (float64(b-sb)))
-			
-			cd.totalColumnScore += math.Abs(float64(r-sr) + float64(g-sg) + float64(b-sb)/3)
+			//fmt.Println(float64(r-sr));
+			cd.totalColumnScore += (math.Round(math.Abs(float64(r-sr) + float64(g-sg) + float64(b-sb))))
 			
 
 		}
 
-		for i := 0; i < height; i++ {
-
-			r, g, b, _ := p.RGBA() //compare each pixel at each y location against each
-			if i > len(scores) {
-				continue
-			}
-
-			sr, sg, sb, _ := scores[i].RGBA()
-
-			cd.r = append(cd.r, math.Abs(float64(r-sr)) + (float64(g-sg)) + (float64(b-sb)))
-			
-
-
-
-		}
-
-
-
-
-
-
+		cd.totalColumnScore = cd.totalColumnScore / float64(len(cd.r))
 
 		if _, ok := used[k]; ok {
 			continue
@@ -173,17 +186,12 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int, h
 
 	}
 
-	//he lowest array sequence in the diff compared to col diff on.
-	// fmt.Println("delta ", len(delta))
-	// fmt.Println("used ", len(used))
-	//rtn := findLowestDiff(delta)
-
 	lowest := math.MaxFloat64
 	rtn := -1
 	for k, v := range delta {
 
 		if math.Abs(v.totalColumnScore) < lowest {
-			lowest = math.Abs(v.totalColumnScore)
+			lowest = (math.Abs(v.totalColumnScore))
 			rtn = k
 		}
 
