@@ -101,16 +101,13 @@ func unShred(img image.Image, t string, outName string) {
 // }
 
 func basicSort(order []int, cols map[int][]color.RGBA, used map[int]int, height int) []int {
-
-	order = append(order, 0)
-	used[0] = 0
-	tick := 0
+	startNo := 20
+	order = append(order, startNo)
+	used[startNo] = startNo
+	tick := startNo
 	for len(order) != len(cols) {
-		if order[tick] == -1 {
-			continue
-		}
-
-		n, used := findClosestColumn(order[tick], cols, used, height)
+		
+		n, used := findClosestColumn(order[tick%len(cols)], cols, used, height)
 		tick++
 		used[n] = n
 		order = append(order, n)
@@ -131,7 +128,7 @@ type columnDiff struct {
 	g                []float64
 	b                []float64
 	lowestCount      int
-	tcsa             [4]float64
+	tcsa             [400]float64
 }
 
 func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int, height int) (int, map[int]int) {
@@ -153,8 +150,7 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int, h
 		cd := columnDiff{}
 		cd.column = k
 		cd.lowestCount = 0
-		var arr [4]float64
-		cd.tcsa = arr
+		
 		for i, p := range cols[k] {
 
 			r, g, b, _ := p.RGBA() //compare each pixel at each y location against each
@@ -166,16 +162,16 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int, h
 
 			cd.r = append(cd.r, math.Abs(float64(r-sr))+(float64(g-sg))+(float64(b-sb)))
 			//fmt.Println(float64(r-sr));
-			cd.totalColumnScore += (math.Abs(float64(r-sr) + float64(g-sg) + float64(b-sb)))
+			cd.totalColumnScore += (float64(i) * math.Abs(float64(r-sr) - float64(g-sg) - float64(b-sb)))
 			cd.tr += float64(r - sr)
 			cd.tg += float64(g - sg)
 			cd.tb += float64(b - sb)
 
 		}
 
-		step := height / 4
+		step := height / 400
 
-		for i := 0; i < height/4; i += step {
+		for i := 0; i < step; i += step {
 
 			//, p := range cols[k]
 
@@ -185,15 +181,12 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int, h
 			}
 
 			sr, sg, sb, _ := scores[i].RGBA()
-
-			cd.r = append(cd.r, math.Abs(float64(r-sr))+(float64(g-sg))+(float64(b-sb)))
-			//fmt.Println(float64(r-sr));
-			cd.totalColumnScore += (math.Abs(float64(r-sr) + float64(g-sg) + float64(b-sb)))
+			
 			cd.tr += float64(r - sr)
 			cd.tg += float64(g - sg)
 			cd.tb += float64(b - sb)
 
-			cd.tcsa[i%step] += (math.Abs(float64(r-sr) + float64(g-sg) + float64(b-sb)))
+			cd.tcsa[i%step] += (float64(1) * math.Abs(float64(r-sr) + float64(g-sg) + float64(b-sb)))
 
 		}
 
@@ -205,41 +198,51 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int, h
 
 	}
 
-	lowest := math.MaxFloat64
+	 lowest := math.MaxFloat64
 	lr := math.MaxFloat64
 	lg := math.MaxFloat64
 	lb := math.MaxFloat64
 
-	al0 := math.MaxFloat64
-	al1 := math.MaxFloat64
-	al2 := math.MaxFloat64
-	al3 := math.MaxFloat64
+	var al [400]float64
+	for i := 0; i< len(al) ; i++ {
+		al[i] = math.MaxFloat64
+	}
 
 	rtn := -1
+	
+	rolling := 0;
 	for k, v := range delta {
 
 		if math.Abs(v.totalColumnScore) < math.Abs(lowest) {
 			lowest = (math.Abs(v.totalColumnScore))
-			rtn = k
+			//rtn = k
 		}
 
 		if math.Abs(v.tr) <= math.Abs(lr) && math.Abs(v.tb) <= lg && math.Abs(v.tb) <= lb {
-			// lr = v.tr
-			// lg = v.tg
-			// lb = v.tb
-			// rtn = k
+			lr = v.tr
+			lg = v.tg
+			lb = v.tb
+			rtn = k
+		}
+		count := 0
+		for i := 0; i < len(al) ; i++ {
+			if math.Abs(v.tcsa[i]) < math.Abs(al[i]) {
+				count++
+			}
 		}
 
-		if math.Abs(v.tcsa[0]) < al0 && math.Abs(v.tcsa[1]) < al1 && math.Abs(v.tcsa[2]) < al2 && math.Abs(v.tcsa[3]) < al3 {
-			al0 = v.tcsa[0]
-			al1 = v.tcsa[1]
-			al2 = v.tcsa[2]
-			al3 = v.tcsa[3]
+		if count > rolling {
+			rolling = count
 			rtn = k
-
+			
+		}
+		if(count == len(al)){
+			//break
 		}
 
 	}
+
+	
 
 	//rtn = findLowestDiff(delta)
 
