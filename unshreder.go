@@ -58,6 +58,17 @@ func unShred(img image.Image, t string, outName string) {
 
 	//order = sort2(cols2, img.Bounds())
 
+
+	// new sort. Pick 1 column. add one more column
+	// For each new column added, check it's difference between all current columns and put it in place.
+
+	//
+
+	//
+
+
+
+
 	out := image.NewRGBA(bounds)
 
 	for i, x := range order {
