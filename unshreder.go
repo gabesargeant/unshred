@@ -66,6 +66,7 @@ func unShred(img image.Image, t string, outName string) {
 
 	//
 
+	order = secondSort(order, cols1, usedCols1, img.Bounds().Max.Y)
 
 
 
@@ -86,31 +87,6 @@ func unShred(img image.Image, t string, outName string) {
 
 }
 
-// func sort2(cols []column, bounds image.Rectangle) []int {
-
-// 	//sortedColumn := make([]column,0)
-
-// 	//used := 0;
-
-// 	column := cols[0]
-// 	next:=-1
-
-// 	for i, v := range column.pixels {
-
-// 		r,g,b,_ := v.RGBA()
-
-// 		delta := math.MaxFloat64
-
-// 		for j, p := range cols{
-// 			sr,sg,sb,_ := p.pixels[i].RGBA()
-// 			d := math.Round(math.Abs(float64(r-sr) + float64(g-sg) + float64(b-sb)))
-// 			cols[j].rollingDelta += d
-
-// 		}
-// 	}
-
-// }
-
 func basicSort(order []int, cols map[int][]color.RGBA, used map[int]int, height int) []int {
 	startNo := 20
 	order = append(order, startNo)
@@ -129,7 +105,82 @@ func basicSort(order []int, cols map[int][]color.RGBA, used map[int]int, height 
 	return order
 }
 
+
+func secondSort(order []int, columns map[int][]color.RGBA, used map[int]int, height int) []int {
+
+	var picture []column
+
+	for k, v := range columns{
+		c := column{}
+		c.pixels = v
+		c.columnPosition = k
+		placecolumn(picture, c)
+
+	}
+
+	for _, v := range picture {
+		c := v.column
+		order = append(order, c)
+	}
+
+
+
+
+	return order
+}
+
+
+func placecolumn(picture []column, col column){
+
+	if(len(picture)==0){		
+		picture = append(picture, col)
+		return;
+	}	
+
+	rd := diff{}
+	rd.dr = math.MaxFloat64
+	rd.dg = math.MaxFloat64
+	rd.db = math.MaxFloat64
+
+	for i := 0; i < len(picture); i++{
+		position := i
+		c := picture[i]
+
+		for j, p := range col.pixels {
+
+			r, g, b, _ := p.RGBA() //get the rgb of the new column			
+			sr, sg, sb, _ := c.pixels[j].RGBA()
+
+			//cd.r = append(cd.r, math.Abs(float64(r-sr))+(float64(g-sg))+(float64(b-sb)))
+			//fmt.Println(float64(r-sr));
+			//cd.totalColumnScore += (float64(i) * math.Abs(float64(r-sr) - float64(g-sg) - float64(b-sb)))
+			rd.dr += float64(r - sr)
+			rd.dg += float64(g - sg)
+			rd.db += float64(b - sb)
+
+		}
+		
+		
+		
+
+		
+
+	}
+
+
+
+}
+
+type diff struct {
+	pos int
+	dr float64
+	dg float64
+	db float64
+
+}
+
 type columnDiff struct {
+	col []color.RGBA
 	column           int
 	totalColumnScore float64
 	tr               float64
