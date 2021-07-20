@@ -54,7 +54,7 @@ func unShred(img image.Image, t string, outName string) {
 	fmt.Println("cols", len(cols1))
 	fmt.Println("cols[0]", len(cols1[0]))
 
-	order = basicSort(order, cols1, usedCols1, img.Bounds().Max.Y)
+	//order = basicSort(order, cols1, usedCols1, img.Bounds().Max.Y)
 
 	//order = sort2(cols2, img.Bounds())
 
@@ -114,12 +114,12 @@ func secondSort(order []int, columns map[int][]color.RGBA, used map[int]int, hei
 		c := column{}
 		c.pixels = v
 		c.columnPosition = k
-		placecolumn(picture, c)
+		picture = placecolumn(picture, c)
 
 	}
 
 	for _, v := range picture {
-		c := v.column
+		c := v.columnPosition
 		order = append(order, c)
 	}
 
@@ -130,21 +130,24 @@ func secondSort(order []int, columns map[int][]color.RGBA, used map[int]int, hei
 }
 
 
-func placecolumn(picture []column, col column){
+func placecolumn(picture []column, col column) []column{
 
 	if(len(picture)==0){		
 		picture = append(picture, col)
-		return;
+		return picture;
 	}	
 
-	rd := diff{}
-	rd.dr = math.MaxFloat64
-	rd.dg = math.MaxFloat64
-	rd.db = math.MaxFloat64
+	var diffSlice []diff
+
 
 	for i := 0; i < len(picture); i++{
 		position := i
 		c := picture[i]
+
+		rd := diff{}
+		rd.dr = 0
+		rd.dg = 0
+		rd.db = 0
 
 		for j, p := range col.pixels {
 
@@ -159,15 +162,32 @@ func placecolumn(picture []column, col column){
 			rd.db += float64(b - sb)
 
 		}
+		rd.pos = position
+		diffSlice = append(diffSlice, rd)
 		
-		
-		
-
-		
-
 	}
 
+	pos := diff{}
+	pos.pos = -1
 
+	for _,d := range diffSlice {
+
+		if pos.pos == -1 {
+			pos = d
+		}
+
+		if d.dr <  pos.dr && d.db < pos.db && d.dg < pos.dg{
+			pos = d
+		}
+	}
+
+	start := picture[:pos.pos]
+	end := picture[pos.pos:]
+
+	start = append(start, col)
+	start = append(start, end...)
+
+	return start
 
 }
 
