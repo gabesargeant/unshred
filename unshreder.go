@@ -157,9 +157,10 @@ func placecolumn(picture []column, col column) []column{
 			//cd.r = append(cd.r, math.Abs(float64(r-sr))+(float64(g-sg))+(float64(b-sb)))
 			//fmt.Println(float64(r-sr));
 			//cd.totalColumnScore += (float64(i) * math.Abs(float64(r-sr) - float64(g-sg) - float64(b-sb)))
-			rd.dr += float64(r - sr)
-			rd.dg += float64(g - sg)
-			rd.db += float64(b - sb)
+			rd.dr += math.Abs(float64(r - sr))
+			rd.dg += math.Abs(float64(g - sg))
+			rd.db += math.Abs(float64(b - sb))
+			rd.ts += math.Abs(float64(r - sr)  - float64(g - sg) - float64(b - sb))
 
 		}
 		rd.pos = position
@@ -169,6 +170,7 @@ func placecolumn(picture []column, col column) []column{
 
 	pos := diff{}
 	pos.pos = -1
+	pos.ts = math.MaxFloat64
 
 	for _,d := range diffSlice {
 
@@ -176,7 +178,10 @@ func placecolumn(picture []column, col column) []column{
 			pos = d
 		}
 
-		if d.dr <  pos.dr && d.db < pos.db && d.dg < pos.dg{
+		if d.dr >  pos.dr && d.db > pos.db && d.dg > pos.dg{
+			pos = d
+		}
+		if d.ts > pos.ts {
 			pos = d
 		}
 	}
@@ -186,6 +191,7 @@ func placecolumn(picture []column, col column) []column{
 
 	start = append(start, col)
 	start = append(start, end...)
+	fmt.Println(len(start))
 
 	return start
 
@@ -196,6 +202,7 @@ type diff struct {
 	dr float64
 	dg float64
 	db float64
+	ts float64
 
 }
 
