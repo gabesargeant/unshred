@@ -148,6 +148,7 @@ func placecolumn(picture []column, col column) []column{
 		rd.dr = 0
 		rd.dg = 0
 		rd.db = 0
+		rd.totalDiff = make([]float64, 0)
 
 		for j, p := range col.pixels {
 
@@ -160,7 +161,8 @@ func placecolumn(picture []column, col column) []column{
 			rd.dr += math.Abs(float64(r - sr))
 			rd.dg += math.Abs(float64(g - sg))
 			rd.db += math.Abs(float64(b - sb))
-			rd.ts += math.Abs(float64(r - sr)  - float64(g - sg) - float64(b - sb))
+			rd.ts += math.Sqrt(math.Abs(float64(r - sr)  + float64(g - sg) + float64(b - sb)))
+			rd.totalDiff = append(rd.totalDiff, math.Abs(float64(r - sr)  + float64(g - sg) + float64(b - sb)))
 
 		}
 		rd.pos = position
@@ -172,19 +174,43 @@ func placecolumn(picture []column, col column) []column{
 	pos.pos = -1
 	pos.ts = math.MaxFloat64
 
-	for _,d := range diffSlice {
-
-		if pos.pos == -1 {
-			pos = d
-		}
-
-		if d.dr >  pos.dr && d.db > pos.db && d.dg > pos.dg{
-			pos = d
-		}
-		if d.ts > pos.ts {
-			pos = d
-		}
+	closesMatch := make([]float64, len(diffSlice[0].totalDiff))
+	for i := 0; i<len(diffSlice[i].totalDiff); I++{
+		closesMatch[i] = math.MaxFloat64
 	}
+
+
+	for i:=0 ; i < len(diffSlice); i++{
+
+		for j := 0; j < len(diffSlice[i].totalDiff); j++{
+
+			if(diffSlice[i].totalDiff[j] < closesMatch[j]){
+				closesMatch[i] = 
+			}
+			
+
+
+		}
+		closesMatch
+	}
+
+	// for _,d := range diffSlice {
+
+	// 	// if pos.pos == -1 {
+	// 	// 	pos = d
+	// 	// }
+
+	// 	// if d.dr >  pos.dr && d.db > pos.db && d.dg > pos.dg{
+	// 	// 	pos = d
+	// 	// }
+	// 	// if d.ts > pos.ts {
+	// 	// 	pos = d
+	// 	// }
+
+		
+
+
+	// }
 
 	start := picture[:pos.pos]
 	end := picture[pos.pos:]
@@ -203,6 +229,7 @@ type diff struct {
 	dg float64
 	db float64
 	ts float64
+	totalDiff []float64
 
 }
 
