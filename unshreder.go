@@ -58,7 +58,6 @@ func unShred(img image.Image, t string, outName string) {
 
 	//order = sort2(cols2, img.Bounds())
 
-
 	// new sort. Pick 1 column. add one more column
 	// For each new column added, check it's difference between all current columns and put it in place.
 
@@ -67,8 +66,6 @@ func unShred(img image.Image, t string, outName string) {
 	//
 
 	order = secondSort(order, cols1, usedCols1, img.Bounds().Max.Y)
-
-
 
 	out := image.NewRGBA(bounds)
 
@@ -93,7 +90,7 @@ func basicSort(order []int, cols map[int][]color.RGBA, used map[int]int, height 
 	used[startNo] = startNo
 	tick := startNo
 	for len(order) != len(cols) {
-		
+
 		n, used := findClosestColumn(order[tick%len(cols)], cols, used, height)
 		tick++
 		used[n] = n
@@ -105,12 +102,11 @@ func basicSort(order []int, cols map[int][]color.RGBA, used map[int]int, height 
 	return order
 }
 
-
 func secondSort(order []int, columns map[int][]color.RGBA, used map[int]int, height int) []int {
 
 	var picture []column
 
-	for k, v := range columns{
+	for k, v := range columns {
 		c := column{}
 		c.pixels = v
 		c.columnPosition = k
@@ -123,24 +119,24 @@ func secondSort(order []int, columns map[int][]color.RGBA, used map[int]int, hei
 		order = append(order, c)
 	}
 
-
-
-
 	return order
 }
 
+type closestMatch struct {
+	columnID int
+	val      float64
+}
 
-func placecolumn(picture []column, col column) []column{
+func placecolumn(picture []column, col column) []column {
 
-	if(len(picture)==0){		
+	if len(picture) == 0 {
 		picture = append(picture, col)
-		return picture;
-	}	
+		return picture
+	}
 
 	var diffSlice []diff
 
-
-	for i := 0; i < len(picture); i++{
+	for i := 0; i < len(picture); i++ {
 		position := i
 		c := picture[i]
 
@@ -152,7 +148,7 @@ func placecolumn(picture []column, col column) []column{
 
 		for j, p := range col.pixels {
 
-			r, g, b, _ := p.RGBA() //get the rgb of the new column			
+			r, g, b, _ := p.RGBA() //get the rgb of the new column
 			sr, sg, sb, _ := c.pixels[j].RGBA()
 
 			//cd.r = append(cd.r, math.Abs(float64(r-sr))+(float64(g-sg))+(float64(b-sb)))
@@ -161,56 +157,68 @@ func placecolumn(picture []column, col column) []column{
 			rd.dr += math.Abs(float64(r - sr))
 			rd.dg += math.Abs(float64(g - sg))
 			rd.db += math.Abs(float64(b - sb))
-			rd.ts += math.Sqrt(math.Abs(float64(r - sr)  + float64(g - sg) + float64(b - sb)))
-			rd.totalDiff = append(rd.totalDiff, math.Abs(float64(r - sr)  + float64(g - sg) + float64(b - sb)))
+			rd.ts += math.Sqrt(math.Abs(float64(r-sr) + float64(g-sg) + float64(b-sb)))
+			rd.totalDiff = append(rd.totalDiff, math.Abs(float64(r-sr)+float64(g-sg)+float64(b-sb)))
 
 		}
 		rd.pos = position
 		diffSlice = append(diffSlice, rd)
-		
+
 	}
 
 	pos := diff{}
 	pos.pos = -1
 	pos.ts = math.MaxFloat64
 
-	closesMatch := make([]float64, len(diffSlice[0].totalDiff))
-	for i := 0; i<len(diffSlice[i].totalDiff); I++{
-		closesMatch[i] = math.MaxFloat64
-	}
-
-
-	for i:=0 ; i < len(diffSlice); i++{
-
-		for j := 0; j < len(diffSlice[i].totalDiff); j++{
-
-			if(diffSlice[i].totalDiff[j] < closesMatch[j]){
-				closesMatch[i] = 
-			}
-			
-
-
-		}
-		closesMatch
-	}
-
-	// for _,d := range diffSlice {
-
-	// 	// if pos.pos == -1 {
-	// 	// 	pos = d
-	// 	// }
-
-	// 	// if d.dr >  pos.dr && d.db > pos.db && d.dg > pos.dg{
-	// 	// 	pos = d
-	// 	// }
-	// 	// if d.ts > pos.ts {
-	// 	// 	pos = d
-	// 	// }
-
-		
-
-
+	// closesMatch := make([]closestMatch, len(diffSlice[0].totalDiff))
+	// for i := 0; i<len(diffSlice[i].totalDiff); i++{
+	// 	cm := closestMatch{
+	// 		columnID: i,
+	// 		val:math.MaxFloat64,
+	// 	}
+	// 	closesMatch[i] = cm
 	// }
+
+	var closestPost []colFreq
+
+	for i := 0; i < len(diffSlice); i++ {
+
+		closesMatch := make([]closestMatch, len(diffSlice[0].totalDiff))
+		for i := 0; i < len(diffSlice[i].totalDiff); i++ {
+			cm := closestMatch{
+				columnID: i,
+				val:      math.MaxFloat64,
+			}
+			closesMatch[i] = cm
+		}
+
+		for j := 0; j < len(diffSlice[i].totalDiff); j++ {
+
+			if diffSlice[i].totalDiff[j] < closesMatch[j].val {
+				closesMatch[i].val = diffSlice[i].totalDiff[j]
+				closesMatch[i].columnID = diffSlice[i].pos
+			}
+
+			cm, weight := mostFrequent(closesMatch)
+			cf := colFreq{
+				match: cm,
+				freq:  weight,
+			}
+			closestPost = append(closestPost, cf)
+		}
+	}
+
+	max := -1
+	cid := -1
+	for _, p := range closestPost {
+
+		if p.freq > max {
+			max = p.freq
+			cid = p.match.columnID
+		}
+	}
+
+	pos.pos = cid
 
 	start := picture[:pos.pos]
 	end := picture[pos.pos:]
@@ -223,18 +231,37 @@ func placecolumn(picture []column, col column) []column{
 
 }
 
-type diff struct {
-	pos int
-	dr float64
-	dg float64
-	db float64
-	ts float64
-	totalDiff []float64
+func mostFrequent(arr []closestMatch) (closestMatch, int) { // assuming no tie
+	m := map[int]int{}
+	var maxCnt int
+	var freq closestMatch
+	for _, a := range arr {
+		m[a.columnID]++
+		if m[a.columnID] > maxCnt {
+			maxCnt = m[a.columnID]
+			freq = a
+		}
+	}
 
+	return freq, maxCnt
+}
+
+type colFreq struct {
+	match closestMatch
+	freq  int
+}
+
+type diff struct {
+	pos       int
+	dr        float64
+	dg        float64
+	db        float64
+	ts        float64
+	totalDiff []float64
 }
 
 type columnDiff struct {
-	col []color.RGBA
+	col              []color.RGBA
 	column           int
 	totalColumnScore float64
 	tr               float64
@@ -266,7 +293,7 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int, h
 		cd := columnDiff{}
 		cd.column = k
 		cd.lowestCount = 0
-		
+
 		for i, p := range cols[k] {
 
 			r, g, b, _ := p.RGBA() //compare each pixel at each y location against each
@@ -278,7 +305,7 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int, h
 
 			cd.r = append(cd.r, math.Abs(float64(r-sr))+(float64(g-sg))+(float64(b-sb)))
 			//fmt.Println(float64(r-sr));
-			cd.totalColumnScore += (float64(i) * math.Abs(float64(r-sr) - float64(g-sg) - float64(b-sb)))
+			cd.totalColumnScore += (float64(i) * math.Abs(float64(r-sr)-float64(g-sg)-float64(b-sb)))
 			cd.tr += float64(r - sr)
 			cd.tg += float64(g - sg)
 			cd.tb += float64(b - sb)
@@ -297,12 +324,12 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int, h
 			}
 
 			sr, sg, sb, _ := scores[i].RGBA()
-			
+
 			cd.tr += float64(r - sr)
 			cd.tg += float64(g - sg)
 			cd.tb += float64(b - sb)
 
-			cd.tcsa[i%step] += (float64(1) * math.Abs(float64(r-sr) + float64(g-sg) + float64(b-sb)))
+			cd.tcsa[i%step] += (float64(1) * math.Abs(float64(r-sr)+float64(g-sg)+float64(b-sb)))
 
 		}
 
@@ -314,19 +341,19 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int, h
 
 	}
 
-	 lowest := math.MaxFloat64
+	lowest := math.MaxFloat64
 	lr := math.MaxFloat64
 	lg := math.MaxFloat64
 	lb := math.MaxFloat64
 
 	var al [400]float64
-	for i := 0; i< len(al) ; i++ {
+	for i := 0; i < len(al); i++ {
 		al[i] = math.MaxFloat64
 	}
 
 	rtn := -1
-	
-	rolling := 0;
+
+	rolling := 0
 	for k, v := range delta {
 
 		if math.Abs(v.totalColumnScore) < math.Abs(lowest) {
@@ -341,7 +368,7 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int, h
 			rtn = k
 		}
 		count := 0
-		for i := 0; i < len(al) ; i++ {
+		for i := 0; i < len(al); i++ {
 			if math.Abs(v.tcsa[i]) < math.Abs(al[i]) {
 				count++
 			}
@@ -350,15 +377,13 @@ func findClosestColumn(index int, cols map[int][]color.RGBA, used map[int]int, h
 		if count > rolling {
 			rolling = count
 			rtn = k
-			
+
 		}
-		if(count == len(al)){
+		if count == len(al) {
 			//break
 		}
 
 	}
-
-	
 
 	//rtn = findLowestDiff(delta)
 
